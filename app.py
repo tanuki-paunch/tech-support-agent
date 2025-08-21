@@ -1,39 +1,36 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
 from pydantic import BaseModel
-import openai
+import subprocess
 import os
 
-# Use your OpenAI API key (add in Render environment variables later)
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
 app = FastAPI()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-@app.get("/")
-def get_index():
-    return FileResponse("index.html")
 
 class Query(BaseModel):
     prompt: str
 
+def run_ollama(prompt):
+    process = subprocess.Popen(
+        ["ollama", "run", "support-agent", prompt],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+    output = ""
+    for line in process.stdout:
+        output += line
+    process.wait()
+    return output.strip()
+
 @app.post("/ask")
 def ask_agent(query: Query):
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": query.prompt}],
-            max_tokens=500,
-        )
-        answer = response.choices[0].message.content.strip()
-        return {"response": answer}
+        response_text = run_ollama(query.prompt)
+        if not response_text:
+            response_text = "No response from Ollama agent."
+        return {"response": response_text}
     except Exception as e:
-        return {"response": f"Error: {e}"}
+        return {"response": f"Error running Ollama agent: {e}"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
