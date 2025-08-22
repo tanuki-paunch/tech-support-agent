@@ -1,11 +1,28 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>Tech Support Agent</title>
 </head>
 <body>
-    <h1>Welcome to Tech Support Agent</h1>
-    <p>This is a minimal FastAPI test page.</p>
+    <h1>Tech Support Agent</h1>
+    <form id="ask-form">
+        <input type="text" id="question" placeholder="Type your question here" required>
+        <button type="submit">Ask</button>
+    </form>
+    <p id="answer"></p>
+
+    <script>
+        const form = document.getElementById('ask-form');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const question = document.getElementById('question').value;
+            const formData = new FormData();
+            formData.append('question', question);
+
+            const response = await fetch('/ask', { method: 'POST', body: formData });
+            const data = await response.json();
+            document.getElementById('answer').innerText = data.response;
+        });
+    </script>
 </body>
 </html>
