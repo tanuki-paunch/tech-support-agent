@@ -27,4 +27,4 @@ def ask_agent(question: str = Form(...)):
         if key.lower() in question.lower():
             return {"response": answer}
 
-    return {"response": responses["default"]}≈
+return {"response": responses["default"]}
