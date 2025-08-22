@@ -1,47 +1,11 @@
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
-import os
-import subprocess
-
-app = FastAPI()
-
-# Serve static files (like index.html) from the same directory
-app.mount("/static", StaticFiles(directory="."), name="static")
-
-@app.get("/", response_class=HTMLResponse)
-def read_index():
-    with open("index.html") as f:
-        return f.read()
-
-# Your /ask endpoint
-class Query:
-    def __init__(self, prompt: str):
-        self.prompt = prompt
-
-def run_ollama(prompt):
-    process = subprocess.Popen(
-        ["ollama", "run", "support-agent", prompt],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True
-    )
-    output = ""
-    for line in process.stdout:
-        output += line
-    process.wait()
-    return output.strip()
-
-@app.post("/ask")
-def ask_agent(query: Query):
-    try:
-        response_text = run_ollama(query.prompt)
-        if not response_text:
-            response_text = "No response from Ollama agent."
-        return {"response": response_text}
-    except Exception as e:
-        return {"response": f"Error running Ollama agent: {e}"}
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("app:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tech Support Agent</title>
+</head>
+<body>
+    <h1>Welcome to Tech Support Agent</h1>
+    <p>This is a minimal FastAPI test page.</p>
+</body>
+</html>
